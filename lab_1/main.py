@@ -2,9 +2,13 @@ import pandas
 import PythonTableConsole as PTC
 import matplotlib.pyplot as plt
 
+import Corelation
+
 df_raw = pandas.read_csv('data/saveecobot_16181.csv', on_bad_lines='warn')  # open file, ignore all rows with errors
+print(df_raw.head())
 
 print("Raw table height:", df_raw.size)
+
 
 df_raw = df_raw.dropna(axis=0, subset='value')  # drop all NAN values in column 'values'
 df_raw = df_raw.drop("value_text", axis = 1)
@@ -47,11 +51,41 @@ df_cooked = pandas.merge(df_cooked, df_pressure_pa,on="logged_at")
 df_cooked = pandas.merge(df_cooked, df_temperature,on="logged_at")
 df_cooked = pandas.merge(df_cooked, df_humidity,on="logged_at")
 
-df_norm=(df_cooked-df_cooked.mean())/df_cooked.std()
+
+df_cooked = df_cooked.reset_index()
+df_cooked["Date"] = pandas.to_datetime(df_cooked["logged_at"])
+df_cooked["Month"],df_cooked["Day"], df_cooked["Hour"] = zip(*[(int(x.month), int(x.day), int(x.hour)) for x in df_cooked["Date"]])
+df_cooked = df_cooked.drop("Date", axis = 1)
+df_cooked = df_cooked.set_index("logged_at")
+print(df_cooked.head())
 
 print(df_cooked.size)
 df_cooked = df_cooked.dropna()
 print(df_cooked.size)
 
+df_norm=(df_cooked-df_cooked.mean())/df_cooked.std()
+
+'''
 df_norm.plot()
 plt.show()
+
+
+columns = list(df_norm.columns)
+print(columns)
+cor_map = []
+for c_a in columns:
+    cor_map.append([])
+    for c_b in columns:
+        cor_map[-1].append(Corelation.cor_val(df_norm[c_a],df_norm[c_b]))
+
+fig, ax = plt.subplots()
+im = ax.imshow(cor_map)
+ax.set_xticks(range(len(columns)), labels=columns)
+ax.set_yticks(range(len(columns)), labels=columns)
+for i in range(len(columns)):
+    for j in range(len(columns)):
+        text = ax.text(j, i, int(cor_map[i][j] * 100)/100,
+                       ha="center", va="center", color="w")
+plt.show()
+'''
+
