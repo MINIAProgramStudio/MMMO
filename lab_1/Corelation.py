@@ -1,7 +1,11 @@
 import pandas
 import math
 
-def cor_val(x,y):
+def cor_val(x,y, depth = None):
+    if depth is None:
+        depth = len(x)
+    x = x[:depth]
+    y = y[:depth]
     sum_both = 0
     sum_x = 0
     sum_y = 0
@@ -29,4 +33,6 @@ def cor_val(x,y):
     sum_x = math.sqrt(sum_x)
     sum_y = math.sqrt(sum_y)
     result = sum_both/(sum_x*sum_y)
+    if math.isnan(result):
+        result = 0
     return result
