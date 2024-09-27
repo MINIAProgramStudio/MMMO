@@ -3,8 +3,10 @@ import PythonTableConsole as PTC
 import matplotlib.pyplot as plt
 
 import Corelation
+import RModel
 
 df_raw = pandas.read_csv('data/saveecobot_16181.csv', on_bad_lines='warn')  # open file, ignore all rows with errors
+
 print(df_raw.head())
 
 print("Raw table height:", df_raw.size)
@@ -55,8 +57,8 @@ df_cooked = pandas.merge(df_cooked, df_humidity,on="logged_at")
 df_cooked = df_cooked.reset_index()
 df_cooked["Date"] = pandas.to_datetime(df_cooked["logged_at"])
 df_cooked["Month"],df_cooked["Day"], df_cooked["Hour"] = zip(*[(int(x.month), int(x.day), int(x.hour)) for x in df_cooked["Date"]])
-df_cooked = df_cooked.drop("Date", axis = 1)
-df_cooked = df_cooked.set_index("logged_at")
+df_cooked = df_cooked.drop("logged_at", axis = 1)
+df_cooked = df_cooked.set_index("Date")
 print(df_cooked.head())
 
 print(df_cooked.size)
@@ -88,4 +90,28 @@ for i in range(len(columns)):
                        ha="center", va="center", color="w")
 plt.show()
 '''
+#df_cooked = df_cooked.iloc[:10000]
 
+barrier = int((df_cooked.shape[0]*7)/10)
+df_cooked = df_cooked.reset_index()
+df_train = df_cooked.iloc[:barrier]
+df_test = df_cooked.iloc[barrier:]
+df_train = df_train.set_index("Date")
+df_test = df_test.set_index("Date")
+
+print(df_train.size,df_test.size)
+
+
+model = RModel.LReg(df_train,df_test,["pm_1"], "pm_25")
+print(model.test_r_sq(),model.test_rmse())
+
+prediction = model.predict()
+
+plt.figure(figsize=(12, 6))
+plt.plot(df_train.index, df_train["pm_25"].rolling(window=10000).mean(), label='Training Data', color='blue')
+plt.plot(df_test.index, df_test['pm_25'].rolling(window=10000).mean(), label='Testing Data', color='green')
+plt.plot(prediction.index, prediction["Prediction"].rolling(window=10000).mean(), color='red', label='Predicted ppm 2.5')
+plt.xlabel('Timestamp')
+plt.ylabel('Value')
+plt.legend()
+plt.show()
