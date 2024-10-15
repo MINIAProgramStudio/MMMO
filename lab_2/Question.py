@@ -8,12 +8,13 @@ def get_sub(x):
     return x.translate(res)
 
 class Question:
-    def __init__(self, find_max: bool, main_func: list, constrains: list):
-        if find_max:
+    def __init__(self, find_max: bool, main_func: list, constrains: list, constrains_op: list):
+        if not find_max:
             self.main_func = main_func
         else:
             self.main_func = [-i for i in main_func]
         self.constrains = constrains
+        self.original_length = len(main_func)
 
     def print_question(self):
         line = ""
@@ -22,40 +23,44 @@ class Question:
                 line += "+ " + str(self.main_func[i])+"*X"+get_sub(str(i+1))+" "
             elif self.main_func[i] < 0:
                 line += "- "+str(abs(self.main_func[i]))+"*X"+get_sub(str(i+1))+" "
-        line += "--> max"
+        line += "--> min"
         print(line[1:])
         for constraint in self.constrains:
             line = ""
-            for i in range(len(constraint)-1):
+            for i in range(len(constraint)-2):
                 if constraint[i] > 0:
                     line += "+ " + str(constraint[i]) + "*X" + get_sub(str(i + 1)) + " "
                 elif constraint[i] < 0:
                     line += "- " + str(abs(constraint[i])) + "*X" + get_sub(str(i + 1)) + " "
-            print(line[1:] + "= "+str(constraint[-1]))
+            print(line[1:] + str(constraint[-2])+" "+str(constraint[-1]))
 
-    def solve(self):
-        x_1 = [i[0] for i in self.constrains]
-        counter = 0
-        while not x_1[counter]:
-            counter += 1
-        new_constrains = []
-        for constraint in self.constrains[:counter]:
-            deviation = constraint[0]/self.constrains[counter][0]
-            for i in range(len(constraint)):
-                constraint[i] -= deviation*self.constrains[counter]
-            new_constrains.append(constraint)
-        new_constrains.append(self.constrains[counter])
-        for constraint in self.constrains[counter+1:]:
-            deviation = constraint[0]/self.constrains[counter][0]
-            for i in range(len(constraint)):
-                constraint[i] -= deviation*self.constrains[counter][i]
-            new_constrains.append(constraint)
-        self.constrains = new_constrains
+    def prepare(self):
+        # Вільний доданок має бути невід'ємним
+        for i in range(len(self.constrains)):
+            if self.constrains[i][-1]<0:
+                self.constrains[i] = [-a for a in self.constrains[i]]
 
-        def x_1(args):
-            x = new_constrains[counter][1:]
-            for i in range(new_constrains[counter][1:]):
-                i+=1
-                x -= new_constrains[counter][i]*args[i]
+        # Зведення нерівностей з <=
+        for i in range(len(self.constrains)):
+            if self.constrains[i][-2] == "<=":
+                self.main_func.append(0)
+                for j in range(len(self.constrains)):
+                    self.constrains[j].insert(-2, 0)
+                self.constrains[-3] = 1
+                self.constrains[i][-2] = "="
+                self.marked[i] = True
 
-        
+        # Зведення нерівностей з >=
+        for i in range(len(self.constrains)):
+            if self.constrains[i][-2] == "<=":
+                self.main_func.append(0)
+                for j in range(len(self.constrains)):
+                    self.constrains[j].insert(-2, 0)
+                self.constrains[-3] = -1
+                self.constrains[i][-2] = "="
+                self.marked[i] = True
+
+        #
+
+
+
