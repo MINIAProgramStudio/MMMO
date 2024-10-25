@@ -29,7 +29,10 @@ class Question:
             elif self.main_func[i] < 0:
                 line += "- "+str(abs(self.main_func[i]))+"*X"+get_sub(str(i+1))+" "
         line += "--> min"
-        print(line[1:])
+        if line[0] == "+":
+            print(line[1:])
+        else:
+            print(line)
         for constraint in self.constrains:
             line = ""
             for i in range(len(constraint)-2):
@@ -37,7 +40,10 @@ class Question:
                     line += "+ " + str(constraint[i]) + "*X" + get_sub(str(i + 1)) + " "
                 elif constraint[i] < 0:
                     line += "- " + str(abs(constraint[i])) + "*X" + get_sub(str(i + 1)) + " "
-            print(line[1:] + str(constraint[-2])+" "+str(constraint[-1]))
+            if line[0] == "+":
+                print(line[1:] + str(constraint[-2])+" "+str(constraint[-1]))
+            else:
+                print(line + str(constraint[-2]) + " " + str(constraint[-1]))
 
     def solve(self):
         eq_a = []
